@@ -6,6 +6,6 @@ const Todo = mongoose.model('Todo',{
     completedAt:{type:Number, default:null}
 })
 
-module.exports({
+module.exports={
     Todo
-})
+}
