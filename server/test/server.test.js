@@ -7,7 +7,7 @@ const {Todo}=require('./../models/todo')
 
 const todos = [
     {_id:new ObjectID(),text: 'First todo'},
-    {_id:new ObjectID(),text: 'Second todo'}
+    {_id:new ObjectID(),text: 'Second todo',completed: true,completedAt:333}
 ]
 
 beforeEach((done)=>{
@@ -127,6 +127,60 @@ describe('DELETE /todo/:id',()=>{
     it('should return 404 for invalid object IDs',(done)=>{
         request(app)
         .delete('/todos/1234')
+        .expect(404)
+        .end(done)
+    })
+})
+
+describe('PATCH /todos/:id',()=>{
+    it('should update the todo',(done)=>{
+        const hexID =  todos[0]._id.toHexString()
+        const text = 'text from test'
+
+        request(app)
+        .patch(`/todos/${hexID}`)
+        .send({
+            completed: true,
+            text
+        })
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBe(true)
+            expect(res.body.todo.completedAt).toBeA('number')
+        })
+        .end(done)
+    })
+
+    it('should clear completed at when todo is not completed',(done)=>{
+        const hexID =  todos[0]._id.toHexString()
+        const text = 'text from test'
+
+        request(app)
+        .patch(`/todos/${hexID}`)
+        .send({
+            completed: false,
+            text
+        })
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBe(false)
+            expect(res.body.todo.completedAt).toNotExist()
+        })
+        .end(done)
+    })
+
+    it('should return 404 if todo not found',(done)=>{
+        request(app)
+        .patch(`/todos/${new ObjectID().toHexString()}`)
+        .expect(404)
+        .end(done)
+    })
+
+    it('should return 404 for invalid object IDs',(done)=>{
+        request(app)
+        .patch('/todos/1234')
         .expect(404)
         .end(done)
     })
