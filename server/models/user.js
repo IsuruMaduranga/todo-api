@@ -32,13 +32,19 @@ const UserSchema = new mongoose.Schema({
     }]
 })
 
-//overriding
+/****************************************
+ Schema.methods->Instance methods
+ Schema.statics->Static methods
+ ****************************************/
+
+//overriding toJSON method of mongoose
 UserSchema.methods.toJSON = function(){
     const user = this
     const userObject = user.toObject()
 
     return _.pick(userObject,['_id','email'])
 }
+
 
 UserSchema.methods.generateAuthToken = function(){
     const user = this
@@ -49,6 +55,23 @@ UserSchema.methods.generateAuthToken = function(){
 
     return user.save().then(()=>{
         return token
+    })
+}
+
+UserSchema.statics.findByToken =  function(token){
+    const User = this
+    let decoded
+
+    try{
+        decoded = jwt.verify(token,'secret')
+    }catch(e){
+        return Promise.reject()
+    }
+
+    return User.findOne({
+        _id:decoded._id,
+        'tokens.token':token,
+        'tokens.access':'auth'
     })
 }
 
